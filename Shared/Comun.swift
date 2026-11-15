@@ -82,6 +82,22 @@ enum Fecha {
         return f
     }()
 
+    private static let fMesAnio: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "es_ES")
+        f.dateFormat = "LLLL yyyy"
+        return f
+    }()
+
+    static func nombreMes(_ d: Date) -> String { return fMesAnio.string(from: d).capitalized }
+
+    static func primerDiaMes(offset: Int) -> Date {
+        let c = cal
+        let comps = c.dateComponents([.year, .month], from: Date())
+        let ini = c.date(from: comps) ?? hoy
+        return c.date(byAdding: .month, value: offset, to: ini) ?? ini
+    }
+
     static var hoy: Date { return cal.startOfDay(for: Date()) }
 
     static func clave(_ d: Date) -> String { return fClave.string(from: d) }

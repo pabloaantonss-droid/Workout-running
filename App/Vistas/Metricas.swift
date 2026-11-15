@@ -20,6 +20,7 @@ struct MetricasView: View {
             }
             barras(d, sem)
             porTipo(d)
+            MesCalendario()
         }
     }
 
@@ -58,29 +59,41 @@ struct MetricasView: View {
     }
 
     func porTipo(_ d: DatosApp) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Por tipo, últimas 5 semanas").font(.headline)
+        var tot: [String: Int] = [:]
+        for t in Rutinas.tipos {
+            var n = 0
+            for off in 0..<5 { n += d.porTipo(off)[t] ?? 0 }
+            tot[t] = n
+        }
+        let m = max(tot.values.max() ?? 1, 1)
+        return VStack(alignment: .leading, spacing: 14) {
+            Text("Por tipo, últimas 5 semanas")
+                .font(.subheadline)
+                .foregroundStyle(Color.gray)
             ForEach(Rutinas.tipos, id: \.self) { t in
-                let cuentas = (0..<5).map { d.porTipo(4 - $0)[t] ?? 0 }
-                HStack {
-                    Text(t).font(.subheadline).lineLimit(1)
-                    Spacer()
-                    HStack(spacing: 5) {
-                        ForEach(0..<5, id: \.self) { i in
-                            Text("\(cuentas[i])")
-                                .font(.caption.bold())
-                                .frame(width: 26, height: 26)
-                                .foregroundStyle(cuentas[i] > 0 ? Color.black : Color.gray)
-                                .background(
-                                    cuentas[i] > 0 ? Color.oro : Color.black.opacity(0.3),
-                                    in: RoundedRectangle(cornerRadius: 7)
-                                )
+                let n = tot[t] ?? 0
+                HStack(spacing: 12) {
+                    Text(t)
+                        .font(.subheadline)
+                        .frame(width: 118, alignment: .leading)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.black.opacity(0.3))
+                            Capsule()
+                                .fill(Color.oro)
+                                .frame(width: g.size.width * CGFloat(n) / CGFloat(m))
                         }
                     }
+                    .frame(height: 8)
+                    Text("\(n)")
+                        .font(.subheadline.bold())
+                        .frame(width: 28, alignment: .trailing)
                 }
             }
         }
-        .padding(14)
+        .padding(16)
         .background(Color.tarjeta, in: RoundedRectangle(cornerRadius: 16))
     }
 }
@@ -90,6 +103,9 @@ struct PesoCard: View {
     @State private var texto = ""
     @State private var sel: Int? = nil
     @State private var aviso = ""
+    @State private var editClave: String? = nil
+    @State private var claveBorrar: String? = nil
+    @State private var confirmar = false
 
     var puntos: [PuntoPeso] {
         let claves = almacen.datos.pesos.keys.sorted()
@@ -109,15 +125,18 @@ struct PesoCard: View {
                 comparacion(p)
             }
             grafica(p)
+            if !p.isEmpty {
+                filaSeleccion(p)
+            }
             HStack(spacing: 10) {
-                TextField("Peso de hoy (kg)", text: $texto)
+                TextField(editClave == nil ? "Peso de hoy (kg)" : "Nuevo peso (kg)", text: $texto)
                     .keyboardType(.decimalPad)
                     .padding(10)
                     .background(Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
                 Button {
                     guardar()
                 } label: {
-                    Text("Guardar")
+                    Text(editClave == nil ? "Guardar" : "Guardar cambio")
                         .bold()
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -125,12 +144,64 @@ struct PesoCard: View {
                         .foregroundStyle(Color.black)
                 }
             }
+            if editClave != nil {
+                Button("Cancelar edición") {
+                    editClave = nil
+                    texto = ""
+                    aviso = ""
+                }
+                .font(.caption)
+                .foregroundStyle(Color.gray)
+            }
             if !aviso.isEmpty {
                 Text(aviso).font(.caption).foregroundStyle(Color.rojo)
             }
         }
         .padding(14)
         .background(Color.tarjeta, in: RoundedRectangle(cornerRadius: 16))
+        .confirmationDialog("¿Eliminar este peso?", isPresented: $confirmar, titleVisibility: .visible) {
+            Button("Eliminar", role: .destructive) {
+                if let k = claveBorrar {
+                    almacen.eliminarPeso(k)
+                    sel = nil
+                    if editClave == k {
+                        editClave = nil
+                        texto = ""
+                    }
+                }
+                claveBorrar = nil
+            }
+            Button("Cancelar", role: .cancel) {
+                claveBorrar = nil
+            }
+        }
+    }
+
+    func indiceSel(_ p: [PuntoPeso]) -> Int {
+        return min(sel ?? (p.count - 1), p.count - 1)
+    }
+
+    func filaSeleccion(_ p: [PuntoPeso]) -> some View {
+        let item = p[indiceSel(p)]
+        return HStack(spacing: 14) {
+            Text(Fecha.largaClave(item.k) + ": " + String(format: "%.1f kg", item.v))
+                .font(.footnote)
+                .foregroundStyle(Color.gray)
+            Spacer()
+            Button {
+                editClave = item.k
+                texto = String(format: "%.1f", item.v)
+                aviso = ""
+            } label: {
+                Image(systemName: "pencil").foregroundStyle(Color.oro)
+            }
+            Button {
+                claveBorrar = item.k
+                confirmar = true
+            } label: {
+                Image(systemName: "trash").foregroundStyle(Color.rojo)
+            }
+        }
     }
 
     @ViewBuilder
@@ -250,9 +321,122 @@ struct PesoCard: View {
             aviso = "Introduce un peso entre 20 y 300 kg"
             return
         }
-        almacen.guardarPeso(v, clave: Fecha.claveHoy())
+        almacen.guardarPeso(v, clave: editClave ?? Fecha.claveHoy())
         texto = ""
         aviso = ""
+        editClave = nil
         sel = nil
+    }
+}
+
+struct DiscoMes: View {
+    let dia: Int
+    let w: Int
+    let r: Int
+    let esHoy: Bool
+
+    var conSesion: Bool { return w > 0 || r > 0 }
+
+    @ViewBuilder
+    var fondo: some View {
+        if w > 0 && r > 0 {
+            Circle().fill(
+                LinearGradient(
+                    stops: [
+                        Gradient.Stop(color: Color.oro, location: 0.5),
+                        Gradient.Stop(color: Color.azul, location: 0.5)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        } else if w > 0 {
+            Circle().fill(Color.oro)
+        } else if r > 0 {
+            Circle().fill(Color.azul)
+        } else {
+            Circle().fill(Color.black.opacity(0.3))
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            fondo
+            Text("\(dia)")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(conSesion ? Color.black : Color.white)
+            if esHoy {
+                Circle().strokeBorder(Color.rojo, lineWidth: 3)
+            }
+        }
+        .frame(width: 36, height: 36)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct MesGrid: View {
+    let primero: Date
+    let datos: DatosApp
+
+    static let letras = ["L", "M", "X", "J", "V", "S", "D"]
+
+    var body: some View {
+        let cal = Fecha.cal
+        let nDias = cal.range(of: .day, in: .month, for: primero)?.count ?? 30
+        let wd = cal.component(.weekday, from: primero)
+        let hueco = (wd + 5) % 7
+        let runs = datos.carrerasPorDia
+        let hoyK = Fecha.claveHoy()
+        let columnas = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+        VStack(spacing: 8) {
+            HStack(spacing: 4) {
+                ForEach(0..<7, id: \.self) { i in
+                    Text(MesGrid.letras[i])
+                        .font(.caption2)
+                        .foregroundStyle(Color.gray)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            LazyVGrid(columns: columnas, spacing: 6) {
+                ForEach(0..<(hueco + nDias), id: \.self) { i in
+                    if i < hueco {
+                        Color.clear.frame(height: 36)
+                    } else {
+                        let dia = i - hueco + 1
+                        let fecha = cal.date(byAdding: .day, value: dia - 1, to: primero) ?? primero
+                        let k = Fecha.clave(fecha)
+                        DiscoMes(dia: dia, w: datos.workouts[k]?.count ?? 0, r: runs[k] ?? 0, esHoy: k == hoyK)
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+struct MesCalendario: View {
+    @EnvironmentObject var almacen: Almacen
+    @State private var pagina = 0
+
+    var body: some View {
+        let d = almacen.datos
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(Fecha.nombreMes(Fecha.primerDiaMes(offset: pagina)))
+                    .font(.headline)
+                Spacer()
+                Leyenda()
+            }
+            TabView(selection: $pagina) {
+                ForEach(-24...0, id: \.self) { off in
+                    MesGrid(primero: Fecha.primerDiaMes(offset: off), datos: d)
+                        .tag(off)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 300)
+        }
+        .padding(14)
+        .background(Color.tarjeta, in: RoundedRectangle(cornerRadius: 16))
     }
 }

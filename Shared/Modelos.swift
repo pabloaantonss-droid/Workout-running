@@ -216,6 +216,11 @@ final class Almacen: ObservableObject {
         guardar()
     }
 
+    func eliminarPeso(_ clave: String) {
+        datos.pesos[clave] = nil
+        guardar()
+    }
+
     func guardarEjercicios(_ tipo: String, _ lista: [Ejercicio]) {
         datos.rutinas[tipo] = lista
         guardar()
