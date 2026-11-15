@@ -1,3 +1,3 @@
-# deporte-ios (proyecto de prueba)
-App minima con widget interactivo y Live Activity.
-Al subir a GitHub, la pestana Actions compila y genera Deporte.ipa (Artifacts).
+# Deporte (app personal para iPhone)
+Contador semanal de Workout y Running, rutinas con modo entreno, peso, metricas, Strava, widget y pantalla de bloqueo.
+Al subir cambios, GitHub Actions compila y deja Deporte.ipa en Artifacts.

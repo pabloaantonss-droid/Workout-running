@@ -1,5 +1,4 @@
 import SwiftUI
-import ActivityKit
 
 @main
 struct DeporteApp: App {
@@ -8,43 +7,57 @@ struct DeporteApp: App {
     }
 }
 
+final class Reloj: ObservableObject {
+    @Published var ahora = Date()
+    private var timer: Timer?
+
+    init() {
+        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.ahora = Date()
+        }
+    }
+
+    deinit {
+        timer?.invalidate()
+    }
+}
+
 struct ContentView: View {
+    @ObservedObject private var almacen = Almacen.compartido
     @Environment(\.scenePhase) private var fase
-    @State private var pestana = "(ninguna)"
-    @State private var mensaje = ""
+    @State private var pestana = 0
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Deporte - prueba").font(.title.bold())
-            Text("Ultima pestana pedida desde el widget: \(pestana)")
-                .multilineTextAlignment(.center)
-            Button("Iniciar ejercicio de prueba") { iniciar() }
-                .buttonStyle(.borderedProminent)
-            Text(mensaje).font(.footnote).foregroundStyle(.secondary)
+        TabView(selection: $pestana) {
+            WorkoutsView()
+                .tabItem { Label("Workouts", systemImage: "dumbbell.fill") }
+                .tag(0)
+            RunningView()
+                .tabItem { Label("Running", systemImage: "figure.run") }
+                .tag(1)
         }
-        .padding()
+        .tint(Color.oro)
+        .environmentObject(almacen)
+        .preferredColorScheme(.dark)
+        .onReceive(NotificationCenter.default.publisher(for: .abrirPestana).receive(on: DispatchQueue.main)) { _ in
+            leer()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .datosCambiaron).receive(on: DispatchQueue.main)) { _ in
+            almacen.recargar()
+        }
         .onChange(of: fase) { _, nueva in
-            if nueva == .active { leer() }
+            if nueva == .active {
+                almacen.recargar()
+                leer()
+            }
         }
         .onAppear { leer() }
     }
 
     func leer() {
-        pestana = UserDefaults.standard.string(forKey: "pestana") ?? "(ninguna)"
-    }
-
-    func iniciar() {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            mensaje = "Las Actividades en directo estan desactivadas en Ajustes"
-            return
-        }
-        let attrs = EjercicioAttributes(rutina: "Pecho (prueba)")
-        let estado = EjercicioAttributes.ContentState(indice: 0, total: ejerciciosPrueba.count, nombre: ejerciciosPrueba[0])
-        do {
-            _ = try Activity.request(attributes: attrs, content: ActivityContent(state: estado, staleDate: nil))
-            mensaje = "Iniciado. Bloquea el iPhone para verlo."
-        } catch {
-            mensaje = "Error: \(error.localizedDescription)"
+        if let p = UserDefaults.standard.string(forKey: "pestana") {
+            pestana = (p == "running") ? 1 : 0
+            UserDefaults.standard.removeObject(forKey: "pestana")
         }
     }
 }
