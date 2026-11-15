@@ -25,6 +25,7 @@ struct WorkoutsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if rutinaAbierta == nil {
+                        EncabezadoPantalla(titulo: "Workouts")
                         Picker("Vista", selection: $vista) {
                             ForEach(Vista.allCases) { v in
                                 Text(v.rawValue).tag(v)
@@ -35,7 +36,7 @@ struct WorkoutsView: View {
                     contenido
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .padding(.top, 24)
                 .padding(.bottom, 24)
             }
         }
@@ -97,13 +98,12 @@ struct SemanaWorkouts: View {
                 diaPanel = DiaSel(id: k)
             })
             .padding(.horizontal, -16)
-            Leyenda()
             previas(d)
         }
     }
 
     func cabecera(_ d: DatosApp) -> some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .top, spacing: 18) {
             Button {
                 irAHoy += 1
             } label: {
@@ -117,29 +117,30 @@ struct SemanaWorkouts: View {
                 }
             }
             .buttonStyle(.plain)
-            Spacer()
             tabla(d)
+            Spacer(minLength: 0)
         }
     }
 
     func tabla(_ d: DatosApp) -> some View {
         let pas = d.porTipo(1)
         let act = d.porTipo(0)
-        return VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 0) {
-                Text("").frame(width: 112)
-                Text("Pasada").frame(width: 46)
-                Text("Actual").frame(width: 46)
+        return Grid(alignment: .trailing, horizontalSpacing: 14, verticalSpacing: 6) {
+            GridRow {
+                Text("")
+                Text("Pasada").font(.caption).foregroundStyle(Color.gray)
+                Text("Actual").font(.caption).foregroundStyle(Color.gray)
             }
-            .font(.caption2)
-            .foregroundStyle(Color.gray)
             ForEach(Rutinas.tipos, id: \.self) { t in
-                HStack(spacing: 0) {
-                    Text(t).frame(width: 112, alignment: .leading).lineLimit(1)
-                    Text("\(pas[t] ?? 0)").frame(width: 46)
-                    Text("\(act[t] ?? 0)").frame(width: 46).foregroundStyle(Color.oro)
+                GridRow {
+                    Text(t)
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .gridColumnAlignment(.leading)
+                    Text("\(pas[t] ?? 0)").font(.subheadline)
+                    Text("\(act[t] ?? 0)").font(.subheadline).foregroundStyle(Color.oro)
                 }
-                .font(.footnote)
             }
         }
     }
@@ -189,9 +190,7 @@ struct SemanaWorkouts: View {
                 ForEach(0..<7, id: \.self) { i in
                     let dia = Fecha.sumar(ini, dias: i)
                     let k = Fecha.clave(dia)
-                    CeldaDia(fecha: dia, w: d.workouts[k]?.count ?? 0, r: runs[k] ?? 0, modo: .workout, esHoy: false)
-                        .scaleEffect(0.78)
-                        .frame(width: 34, height: 52)
+                    CeldaDia(fecha: dia, w: d.workouts[k]?.count ?? 0, r: runs[k] ?? 0, modo: .workout, esHoy: false, ancho: 44, futuro: false)
                 }
             }
             HStack(spacing: 6) {

@@ -47,18 +47,22 @@ struct FilaContador: View {
 
     var body: some View {
         Button(intent: AbrirPestanaIntent(pestana: pestana)) {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Image(systemName: icono)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                 Text(nombre)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .lineLimit(1)
-                Spacer(minLength: 0)
+                    .minimumScaleFactor(0.7)
+                    .layoutPriority(1)
+                Spacer(minLength: 2)
                 Text("\(n)")
-                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .font(.system(size: 24, weight: .heavy, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
             }
             .foregroundStyle(Color.black)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 8)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(color, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
@@ -81,11 +85,13 @@ struct ContadorWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "Contador", provider: ProveedorContador()) { entrada in
             VistaContador(e: entrada)
+                .padding(10)
                 .containerBackground(Color(hex: 0x2B2D31), for: .widget)
         }
-        .configurationDisplayName("Deporte")
+        .configurationDisplayName("Entrenos")
         .description("Sesiones de esta semana")
         .supportedFamilies([.systemSmall])
+        .contentMarginsDisabled()
     }
 }
 

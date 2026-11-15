@@ -17,13 +17,14 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: Deporte
+        CFBundleDisplayName: Entrenos
         NSSupportsLiveActivities: true
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pablo.deporte
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - target: DeporteWidget
   DeporteWidget:
@@ -33,7 +34,7 @@ targets:
     info:
       path: Widget/Info.plist
       properties:
-        CFBundleDisplayName: Deporte Widget
+        CFBundleDisplayName: Entrenos Widget
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

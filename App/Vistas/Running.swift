@@ -13,15 +13,15 @@ struct RunningView: View {
             Color.fondoApp.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    EncabezadoPantalla(titulo: "Running")
                     cabecera(d)
                     TiraDias(datos: d, modo: .running, irAHoy: irAHoy)
                         .padding(.horizontal, -16)
-                    Leyenda()
                     carreras(d)
                     controles
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .padding(.top, 24)
                 .padding(.bottom, 24)
             }
         }

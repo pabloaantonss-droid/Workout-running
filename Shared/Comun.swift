@@ -113,6 +113,17 @@ enum Fecha {
         return fLarga.string(from: d)
     }
 
+    static func textoSemana() -> String {
+        let ini = inicioSemana(hoy)
+        let fin = sumar(ini, dias: 6)
+        let d1 = cal.component(.day, from: ini)
+        let d2 = cal.component(.day, from: fin)
+        if cal.component(.month, from: ini) == cal.component(.month, from: fin) {
+            return "Semana del \(d1) al \(d2)"
+        }
+        return "Semana del \(corta(ini)) al \(corta(fin))"
+    }
+
     static func mmss(_ x: Double) -> String {
         let n = Int(max(0, x))
         return String(format: "%d:%02d", n / 60, n % 60)
