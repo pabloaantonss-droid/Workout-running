@@ -119,6 +119,7 @@ struct SemanaWorkouts: View {
             .buttonStyle(.plain)
             Spacer(minLength: 0)
             tabla(d)
+                .padding(.trailing, 12)
         }
     }
 

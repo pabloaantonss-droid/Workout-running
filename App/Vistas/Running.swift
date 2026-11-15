@@ -150,23 +150,23 @@ struct TarjetaCarrera: View {
 
     var datos: [(String, String)] {
         var res: [(String, String)] = []
+        res.append(("Km hechos", String(format: "%.2f km", c.km)))
         if let s = c.seg { res.append(("Duración", Fecha.hms(s))) }
         if let r = ritmo { res.append(("Ritmo", r)) }
         if let dn = c.desnivel { res.append(("Desnivel", "\(Int(dn.rounded())) m")) }
-        if let p = c.pulso { res.append(("Pulso medio", "\(Int(p.rounded())) ppm")) }
         return res
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(Fecha.largaClave(c.fecha))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.gray)
-                Spacer()
                 Text(String(format: "%.2f km", c.km))
                     .font(.title2.bold())
                     .foregroundStyle(Color.azul)
+                Spacer()
+                Text(Fecha.largaClave(c.fecha))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.gray)
             }
             if !datos.isEmpty {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -179,11 +179,9 @@ struct TarjetaCarrera: View {
                 Text(n).font(.subheadline).foregroundStyle(Color.white)
             }
             if let fs = c.fotos, !fs.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(fs, id: \.self) { nombre in
-                            miniatura(nombre)
-                        }
+                VStack(spacing: 10) {
+                    ForEach(fs, id: \.self) { nombre in
+                        miniatura(nombre)
                     }
                 }
             }
@@ -202,8 +200,8 @@ struct TarjetaCarrera: View {
         if let img = FotosDiario.cargar(nombre) {
             Image(uiImage: img)
                 .resizable()
-                .scaledToFill()
-                .frame(width: 84, height: 84)
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .onTapGesture { foto = FotoSel(id: nombre) }
         }
@@ -254,7 +252,6 @@ struct FormularioCarrera: View {
     @State private var kmTxt: String
     @State private var durTxt: String
     @State private var desnivelTxt: String
-    @State private var pulsoTxt: String
     @State private var nota: String
     @State private var fotos: [String]
     @State private var nuevas: [String] = []
@@ -270,7 +267,6 @@ struct FormularioCarrera: View {
         _kmTxt = State(initialValue: original.map { String(format: "%.2f", $0.km) } ?? "")
         _durTxt = State(initialValue: original?.seg.map { Fecha.hms($0) } ?? "")
         _desnivelTxt = State(initialValue: original?.desnivel.map { String(Int($0.rounded())) } ?? "")
-        _pulsoTxt = State(initialValue: original?.pulso.map { String(Int($0.rounded())) } ?? "")
         _nota = State(initialValue: original?.nota ?? "")
         _fotos = State(initialValue: original?.fotos ?? [])
     }
@@ -286,10 +282,8 @@ struct FormularioCarrera: View {
                 Section("Opcional") {
                     TextField("Duración (por ejemplo 32:15)", text: $durTxt)
                         .keyboardType(.numbersAndPunctuation)
-                    TextField("Desnivel (m)", text: $desnivelTxt)
+                    TextField("Desnivel positivo (m)", text: $desnivelTxt)
                         .keyboardType(.decimalPad)
-                    TextField("Pulso medio (ppm)", text: $pulsoTxt)
-                        .keyboardType(.numberPad)
                     TextField("Nota", text: $nota, axis: .vertical)
                         .lineLimit(1...4)
                 }
@@ -447,12 +441,6 @@ struct FormularioCarrera: View {
             aviso = "El desnivel debe ser un número"
             return
         }
-        let tP = pulsoTxt.trimmingCharacters(in: .whitespaces)
-        let pul = numero(tP)
-        if !tP.isEmpty && pul == nil {
-            aviso = "El pulso debe ser un número"
-            return
-        }
         let textoNota = nota.trimmingCharacters(in: .whitespacesAndNewlines)
         let id = original?.id ?? Int(Date().timeIntervalSince1970 * 1000)
         let c = Carrera(
@@ -461,7 +449,7 @@ struct FormularioCarrera: View {
             km: km,
             seg: seg,
             desnivel: desn,
-            pulso: pul,
+            pulso: original?.pulso,
             nota: textoNota.isEmpty ? nil : textoNota,
             fotos: fotos.isEmpty ? nil : fotos
         )
