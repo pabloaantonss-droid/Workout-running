@@ -81,13 +81,7 @@ struct ContadorWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "Contador", provider: ProveedorContador()) { entrada in
             VistaContador(e: entrada)
-                .containerBackground(for: .widget) {
-                    LinearGradient(
-                        colors: [Color(hex: 0x3A1C71), Color(hex: 0x1B2A6B)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
+                .containerBackground(Color(hex: 0x2B2D31), for: .widget)
         }
         .configurationDisplayName("Deporte")
         .description("Sesiones de esta semana")
