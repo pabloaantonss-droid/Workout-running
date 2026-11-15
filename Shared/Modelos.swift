@@ -18,11 +18,12 @@ struct Ejercicio: Codable, Identifiable, Hashable {
 struct Carrera: Codable, Identifiable, Hashable {
     var id: Int
     var fecha: String
-    var nombre: String
     var km: Double
-    var seg: Int
-    var desnivel: Double
+    var seg: Int?
+    var desnivel: Double?
     var pulso: Double?
+    var nota: String?
+    var fotos: [String]?
 }
 
 enum Rutinas {
@@ -213,6 +214,24 @@ final class Almacen: ObservableObject {
 
     func guardarPeso(_ kg: Double, clave: String) {
         datos.pesos[clave] = kg
+        guardar()
+    }
+
+    func guardarCarrera(_ c: Carrera) {
+        if let i = datos.carreras.firstIndex(where: { $0.id == c.id }) {
+            datos.carreras[i] = c
+        } else {
+            datos.carreras.append(c)
+        }
+        datos.carreras.sort { x, y in
+            if x.fecha != y.fecha { return x.fecha > y.fecha }
+            return x.id > y.id
+        }
+        guardar()
+    }
+
+    func eliminarCarrera(_ id: Int) {
+        datos.carreras.removeAll { $0.id == id }
         guardar()
     }
 
