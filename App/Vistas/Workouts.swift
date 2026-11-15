@@ -103,7 +103,7 @@ struct SemanaWorkouts: View {
     }
 
     func cabecera(_ d: DatosApp) -> some View {
-        HStack(alignment: .top, spacing: 18) {
+        HStack(alignment: .top, spacing: 8) {
             Button {
                 irAHoy += 1
             } label: {
@@ -117,30 +117,34 @@ struct SemanaWorkouts: View {
                 }
             }
             .buttonStyle(.plain)
-            tabla(d)
             Spacer(minLength: 0)
+            tabla(d)
         }
     }
 
     func tabla(_ d: DatosApp) -> some View {
         let pas = d.porTipo(1)
         let act = d.porTipo(0)
-        return Grid(alignment: .trailing, horizontalSpacing: 14, verticalSpacing: 6) {
-            GridRow {
-                Text("")
-                Text("Pasada").font(.caption).foregroundStyle(Color.gray)
-                Text("Actual").font(.caption).foregroundStyle(Color.gray)
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text("").frame(width: 124)
+                Text("Pasada").frame(width: 44, alignment: .trailing)
+                Text("Actual").frame(width: 44, alignment: .trailing)
             }
+            .font(.caption)
+            .foregroundStyle(Color.gray)
             ForEach(Rutinas.tipos, id: \.self) { t in
-                GridRow {
+                HStack(spacing: 8) {
                     Text(t)
-                        .font(.subheadline)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                        .gridColumnAlignment(.leading)
-                    Text("\(pas[t] ?? 0)").font(.subheadline)
-                    Text("\(act[t] ?? 0)").font(.subheadline).foregroundStyle(Color.oro)
+                        .minimumScaleFactor(0.8)
+                        .frame(width: 124, alignment: .leading)
+                    Text("\(pas[t] ?? 0)").frame(width: 44, alignment: .trailing)
+                    Text("\(act[t] ?? 0)")
+                        .foregroundStyle(Color.oro)
+                        .frame(width: 44, alignment: .trailing)
                 }
+                .font(.subheadline)
             }
         }
     }

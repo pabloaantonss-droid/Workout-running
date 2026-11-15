@@ -13,6 +13,7 @@ struct CeldaDia: View {
     let esHoy: Bool
     let ancho: CGFloat
     let futuro: Bool
+    var compacta: Bool = false
 
     static let letras = ["D", "L", "M", "X", "J", "V", "S"]
 
@@ -26,15 +27,19 @@ struct CeldaDia: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            Text(letra)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(esHoy ? Color.rojo : Color.gray)
-                .frame(height: 14)
+            if !compacta {
+                Text(letra)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(esHoy ? Color.rojo : Color.gray)
+                    .frame(height: 14)
+            }
             disco
-            Text(etiquetaMes)
-                .font(.system(size: 10))
-                .foregroundStyle(Color.gray)
-                .frame(height: 12)
+            if !compacta {
+                Text(etiquetaMes)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.gray)
+                    .frame(height: 12)
+            }
         }
         .frame(width: ancho)
         .opacity(futuro ? 0.45 : 1.0)

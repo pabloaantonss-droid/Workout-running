@@ -6,6 +6,7 @@ struct RunningView: View {
     @AppStorage("stravaID") private var stravaID = ""
     @AppStorage("stravaSecret") private var stravaSecret = ""
     @State private var irAHoy = 0
+    @State private var ajustesAbiertos = true
 
     var body: some View {
         let d = almacen.datos
@@ -90,7 +91,7 @@ struct RunningView: View {
             if !strava.estado.isEmpty {
                 Text(strava.estado).font(.caption).foregroundStyle(Color.gray)
             }
-            DisclosureGroup("Ajustes de Strava") {
+            DisclosureGroup("Ajustes de Strava", isExpanded: $ajustesAbiertos) {
                 VStack(alignment: .leading, spacing: 8) {
                     TextField("Client ID", text: $stravaID)
                         .textInputAutocapitalization(.never)
@@ -100,9 +101,13 @@ struct RunningView: View {
                     SecureField("Client Secret", text: $stravaSecret)
                         .padding(10)
                         .background(Color.tarjeta, in: RoundedRectangle(cornerRadius: 10))
-                    Text("En strava.com/settings/api pon como Authorization Callback Domain: localhost")
+                    Text("1. Abre la página de Strava y crea una aplicación (nombre y categoría libres).\n2. En Authorization Callback Domain escribe: localhost\n3. Copia el Client ID y el Client Secret que te da Strava y pégalos aquí.")
                         .font(.caption)
                         .foregroundStyle(Color.gray)
+                    if let url = URL(string: "https://www.strava.com/settings/api") {
+                        Link("Abrir strava.com/settings/api", destination: url)
+                            .font(.subheadline)
+                    }
                     if strava.conectado {
                         Button("Volver a conectar") {
                             Task { await strava.conectar() }
