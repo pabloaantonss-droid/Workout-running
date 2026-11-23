@@ -15,7 +15,36 @@ enum Cfg {
         return lista.first
     }
 
+    static func grupoDeProvision() -> String? {
+        guard let ruta = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision"),
+              let data = FileManager.default.contents(atPath: ruta),
+              let ini = data.range(of: Data("<?xml".utf8)),
+              let fin = data.range(of: Data("</plist>".utf8)) else { return nil }
+        let trozo = data.subdata(in: ini.lowerBound..<fin.upperBound)
+        guard let obj = try? PropertyListSerialization.propertyList(from: trozo, options: [], format: nil),
+              let dic = obj as? [String: Any],
+              let ent = dic["Entitlements"] as? [String: Any],
+              let lista = ent["com.apple.security.application-groups"] as? [String] else { return nil }
+        if let g = lista.first(where: { $0.hasSuffix("com.pablo.deporte") }) { return g }
+        return lista.first
+    }
+
+    static let grupoCalculado: String = {
+        if let g = grupoDe(Bundle.main.infoDictionary) { return g }
+        if let g = grupoDeProvision() { return g }
+        let padre = Bundle.main.bundleURL
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Info.plist")
+        if let d = NSDictionary(contentsOf: padre) as? [String: Any], let g = grupoDe(d) { return g }
+        return grupoPorDefecto
+    }()
+
     static var grupoID: String {
+        return grupoCalculado
+    }
+
+    static var grupoIDAntiguo: String {
         if let g = grupoDe(Bundle.main.infoDictionary) { return g }
         let padre = Bundle.main.bundleURL
             .deletingLastPathComponent()
