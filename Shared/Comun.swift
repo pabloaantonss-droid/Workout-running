@@ -54,9 +54,16 @@ enum Cfg {
         return grupoPorDefecto
     }
 
-    static var defaults: UserDefaults {
-        return UserDefaults(suiteName: grupoID) ?? UserDefaults.standard
-    }
+    static let defaults: UserDefaults = {
+        let nuevo = UserDefaults(suiteName: grupoCalculado) ?? UserDefaults.standard
+        if grupoCalculado != grupoPorDefecto,
+           nuevo.data(forKey: "datos") == nil,
+           let viejo = UserDefaults(suiteName: grupoPorDefecto),
+           let d = viejo.data(forKey: "datos") {
+            nuevo.set(d, forKey: "datos")
+        }
+        return nuevo
+    }()
 }
 
 extension Color {
